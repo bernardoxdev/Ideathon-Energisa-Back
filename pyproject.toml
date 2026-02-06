@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "api-aulas"
+version = "0.2.0"
+description = "Plataforma de API com FastAPI, autenticação JWT e classificação multimodal de risco"
+readme = "README.md"
+requires-python = ">=3.10"
+
+authors = [
+    { name = "Bernardo de Castro", email = "bernardocmfgomes@gmail.com" }
+]
+
+dependencies = [
+    "fastapi==0.115.6",
+    "uvicorn[standard]==0.34.0",
+    "python-multipart==0.0.20",
+    "python-jose[cryptography]==3.5.0",
+    "passlib[bcrypt]==1.7.4",
+    "bcrypt==3.2.2",
+    "sqlalchemy==2.0.45",
+    "psycopg2-binary==2.9.11",
+    "slowapi==0.1.9",
+    "limits>=2.3",
+    "python-dotenv==1.0.1",
+    "pydantic>=2.6",
+    "polars==1.8.2",
+    "brutils==2.2.0",
+    "pdfplumber==0.11.4",
+    "pymupdf==1.24.10",
+    "torch>=2.1.0",
+    "transformers>=4.37.0",
+    "accelerate>=1.10.1",
+    "sentence-transformers>=2.6.0",
+    "scikit-learn>=1.4.0",
+    "joblib>=1.3.0",
+    "pillow>=10.2.0",
+    "unidecode>=1.3.8"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "httpx==0.27.2"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["backend/tests"]
