@@ -1,0 +1,15 @@
+- Tipos de dados aceitos: Imagens, Textos, Geolocalizaçao, Videos e Audios
+- Dados processados (Inicial): Textos, Imagens e Geolocalizaçao
+- Dado obrigatorio: Texto
+- Diferencial do projeto: API Inteligente + IA
+- 2 metodos
+  - Empresas e Parceiros
+    - API
+    - Chatbot
+  - Clientes
+    - Chatbot
+- 3 vias API
+  - Banco de dados
+  - MCP
+  - SKLearn
+- Link fluxograma: [Miro](https://miro.com/welcomeonboard/SHovZzY0eDVET2ZicEZBV0ZpYmVqOVRSeG9KT0RMQm5wQXBZTENKVU1jeU44YllZOWZuNTRYZFNLeHA2MGRRdDI1cXNLQmwreXZpUkpKeWJjVFNna002THZ5MEpwT2pJTFExVVJFZUJ0OW5CdFdGYzlaLzgxeEY0UWs3ZVJJQUtQdGo1ZEV3bUdPQWRZUHQzSGl6V2NBPT0hdjE=?share_link_id=535908279847)
