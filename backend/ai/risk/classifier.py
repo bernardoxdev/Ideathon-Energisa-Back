@@ -1,5 +1,6 @@
 import joblib
 from pathlib import Path
+
 from backend.ai.risk.schema import RiskResult
 from backend.ai.risk.vocab import ENERGISA_TERMS
 from backend.ai.risk.utils import normalizar
@@ -25,16 +26,21 @@ def classificar_risco(descricao: str) -> RiskResult:
     risco = str(classes[idx])
     confianca = float(probs[idx])
 
+    fallback_usado = False
+
     termos_criticos = map(normalizar, ENERGISA_TERMS["critico"])
     if any(t in texto for t in termos_criticos):
         risco = "critico"
         confianca = max(confianca, 0.95)
+        fallback_usado = True
 
     if risco == "medio" and confianca < 0.45:
         risco = "alto"
+        fallback_usado = True
 
     return RiskResult(
         risco=risco,
         confianca=round(confianca, 2),
-        justificativa=descricao
+        justificativa=descricao,
+        fallback_usado=fallback_usado
     )

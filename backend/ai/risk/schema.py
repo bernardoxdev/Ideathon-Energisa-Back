@@ -9,3 +9,4 @@ class RiskResult:
     risco: RiskLevel
     confianca: float
     justificativa: str
+    fallback_usado: bool

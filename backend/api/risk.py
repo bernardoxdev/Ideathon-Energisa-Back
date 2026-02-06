@@ -1,11 +1,21 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
-from pydantic import BaseModel
-import tempfile
 import os
+import tempfile
+
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status, Depends
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from backend.ai.blip2.infer import analisar_cenario
-from backend.ai.risk.classifier import classificar_risco
+from backend.ai.risk.classifier import (
+    classificar_risco,
+    get_model
+)
 from backend.ai.risk.schema import RiskResult
+from backend.ai.risk.explain import explain_decision
+from backend.ai.risk.utils import normalizar
+
+from backend.core.database import get_db
+from backend.models.risk_audit import RiskAudit
 
 router = APIRouter(prefix="/risk", tags=["Risk"])
 
@@ -23,7 +33,8 @@ class RiskResponse(BaseModel):
 )
 async def classify_risk(
     texto: str = Form(..., min_length=3),
-    imagem: UploadFile = File(...)
+    imagem: UploadFile = File(...),
+    db: Session = Depends(get_db)
 ):
     if imagem.content_type not in ("image/jpeg", "image/png"):
         raise HTTPException(
@@ -57,8 +68,37 @@ async def classify_risk(
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
 
+    modelo = get_model()
+
+    termos_explicativos = explain_decision(modelo, normalizar(descricao_completa), top_k=5)
+
+    audit = RiskAudit(
+        input_text=texto,
+        visual_description=descricao_visual,
+        risco=resultado.risco,
+        confianca=resultado.confianca,
+        model_version="v1",
+        used_fallback=str(resultado.fallback_usado),
+        explain_terms=", ".join(termos_explicativos)
+    )
+
+    db.add(audit)
+    db.commit()
+
     return RiskResponse(
         risco=resultado.risco,
         confianca=resultado.confianca,
         justificativa=resultado.justificativa
     )
+
+@router.get("/history")
+def listar_riscos(
+    risco: str = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(RiskAudit)
+
+    if risco:
+        query = query.filter(RiskAudit.risco == risco)
+
+    return query.order_by(RiskAudit.created_at.desc()).limit(100).all()
