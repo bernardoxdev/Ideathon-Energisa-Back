@@ -10,4 +10,4 @@ class TiposChamados(Base):
     tipo_chamado = Column(String(150), index=True, nullable=False)
     precisa_foto = Column(Boolean, default=False)
 
-    chamados = relationship("Chamados", back_populates="tipo")
+    chamados = relationship("Chamados", back_populates="tipos_chamados")

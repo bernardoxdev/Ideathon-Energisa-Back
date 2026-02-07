@@ -13,4 +13,4 @@ class Enderecos(Base):
     cidade = Column(String(100), nullable=False)
     uf = Column(String(2), nullable=False)
 
-    chamados = relationship("Chamados", back_populates="endereco")
+    chamados = relationship("Chamados", back_populates="enderecos")
