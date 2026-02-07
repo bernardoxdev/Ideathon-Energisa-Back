@@ -9,7 +9,7 @@ class Funcionarios(Base):
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
 
-    documento = Column(String(30), index=True, nullable=False)
-    role = Column(String(30), index=True, nullable=False) # Tecnico, Suporte
+    documento = Column(String(30), index=True, nullable=True)
+    role = Column(String(30), index=True, nullable=True) # Tecnico, Suporte
 
     user = relationship("User", back_populates="funcionarios")

@@ -9,7 +9,7 @@ class Parceiros(Base):
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
 
-    telefone = Column(String(20), index=True, nullable=False)
+    telefone = Column(String(20), index=True, nullable=True)
     telefone_secundario = Column(String(20), index=True, nullable=True)
 
     email_secundario = Column(String(150), index=True, nullable=True)
