@@ -12,7 +12,10 @@ from backend.models.return_schemas import (
     RiskResponse
 )
 
-router = APIRouter(prefix="/risk", tags=["Risk"])
+router = APIRouter(
+    prefix="/risk",
+    tags=["Risk"]
+)
 
 @router.post(
     "/classify", status_code=status.HTTP_200_OK,
@@ -64,3 +67,6 @@ def listar_riscos(
         query = query.filter(RiskAudit.risco == risco)
 
     return query.order_by(RiskAudit.created_at.desc()).limit(100).all()
+
+if __name__ == '__main__':
+    pass

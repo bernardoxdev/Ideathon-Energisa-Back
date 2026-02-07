@@ -25,7 +25,10 @@ from backend.models.return_schemas import (
     Refresh
 )
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter(
+    prefix="/auth",
+    tags=["Auth"]
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

@@ -25,3 +25,4 @@ class User(Base):
     # Endereço e Demanda
     # Carga Alta nao precisa de foto
     # Fotos: Arvore caida, poste caido, acidente (opcional), Inspençao de rede
+    # Toque acidental, Construçao Civil, Telecom, Furto

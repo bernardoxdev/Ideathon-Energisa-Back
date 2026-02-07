@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, String
+from sqlalchemy import Column, Integer, ForeignKey, String, Boolean
 from sqlalchemy.orm import relationship
 from backend.core.database import Base
 
@@ -13,5 +13,9 @@ class Parceiros(Base):
     telefone_secundario = Column(String(20), index=True, nullable=True)
 
     email_secundario = Column(String(150), index=True, nullable=True)
+
+    endereco = Column(String(300), index=True, nullable=True)
+
+    prioridade = Column(Boolean, index=True, default=False)
 
     user = relationship("User", back_populates="parceiros")
