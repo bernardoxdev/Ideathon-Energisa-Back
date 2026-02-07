@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from backend.core.limiter import limiter
 from backend.core.database import init_db, create_tables
 from backend.data.seed import criar_admin_se_nao_existir
+from backend.events.register_events import register_events
 
 from backend.ai.risk.train_runner import train_if_needed
 
@@ -42,15 +43,14 @@ async def lifespan(app: FastAPI):
     else:
         print("[RISK] Auto treino desabilitado")
 
+    register_events()
+
     yield
 
 app = FastAPI(
-    title="API Aulas",
+    title="Delta 360",
     summary="",
     description="""
-    API responsável por fornecer dados acadêmicos como:
-    - Sistema de Login e Autenticação
-    - Cadastro de Alunos
     """,
     version="v0.1.0-BETA",
     lifespan=lifespan

@@ -8,11 +8,13 @@ from backend.core.jwt import (
     create_refresh_token
 )
 
-from backend.models.refresh_token import RefreshToken
 from backend.core.database import get_db
+from backend.core.events import event_dispatcher
+from backend.core.security import require_role
+
+from backend.models.refresh_token import RefreshToken
 from backend.models.user import User
 from backend.models.schemas import RegisterAdminRequest
-from backend.core.security import require_role
 from backend.models.return_schemas import LoginAndRegister
 
 router = APIRouter(
@@ -22,13 +24,12 @@ router = APIRouter(
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-
 @router.post(
     "/register", status_code=status.HTTP_201_CREATED,
     response_model=LoginAndRegister,
     summary="Registrar novo usuário",
     description="Registra um novo usuário",
-    dependencies=[Depends(require_role("admin"))]
+    dependencies=[Depends(require_role("admin", "owner"))]
 )
 def register(data: RegisterAdminRequest, db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == data.username).first():
@@ -46,6 +47,11 @@ def register(data: RegisterAdminRequest, db: Session = Depends(get_db)):
         )
 
         db.add(user)
+
+        db.flush()
+
+        event_dispatcher.dispatch("user_created", user, db)
+
         db.commit()
 
     except SQLAlchemyError:

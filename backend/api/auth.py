@@ -156,7 +156,7 @@ def register(
         username=data.username,
         email=data.email,
         hashed_password=pwd_context.hash(data.password),
-        role="usuario",
+        role="usuarios",
     )
 
     try:

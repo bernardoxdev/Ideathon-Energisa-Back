@@ -3,6 +3,10 @@ from sqlalchemy.orm import Session
 
 from backend.core.database import get_db
 from backend.core.risk_core import process_risk_analysis
+from backend.core.security import (
+    require_role
+)
+
 from backend.models.risk_audit import RiskAudit
 from backend.models.return_schemas import (
     RiskResponse
@@ -14,7 +18,8 @@ router = APIRouter(prefix="/risk", tags=["Risk"])
     "/classify", status_code=status.HTTP_200_OK,
     response_model=RiskResponse,
     summary="Classificar risco a partir de texto e imagem",
-    description="Analisa um cenário usando texto e imagem e retorna o nível de risco"
+    description="Analisa um cenário usando texto e imagem e retorna o nível de risco",
+    dependencies=[Depends(require_role("funcionarios", "admin", "owner"))]
 )
 async def classify_risk(
     texto: str = Form(..., min_length=3),
@@ -46,7 +51,8 @@ async def classify_risk(
 @router.get(
     "/history", status_code=status.HTTP_200_OK,
     summary="Historico de classificaçoes",
-    description="Pega todo o historico das classificacoes"
+    description="Pega todo o historico das classificacoes",
+    dependencies = [Depends(require_role("funcionarios", "admin", "owner"))]
 )
 def listar_riscos(
     risco: str = None,
