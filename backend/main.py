@@ -31,8 +31,16 @@ async def lifespan(app: FastAPI):
     auto_train = os.getenv("AUTO_TRAIN_RISK_MODEL", "true").lower() == "true"
     force_train = os.getenv("FORCE_TRAIN_RISK_MODEL", "false").lower() == "true"
 
+    print(
+        f"[RISK] auto_train={auto_train} | "
+        f"force_train={force_train} | "
+    )
+
     if auto_train:
+        print("[RISK] Auto treino habilitado")
         train_if_needed(force=force_train)
+    else:
+        print("[RISK] Auto treino desabilitado")
 
     yield
 

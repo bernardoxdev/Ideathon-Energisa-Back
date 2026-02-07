@@ -1,12 +1,13 @@
 def explain_decision(model, texto, top_k=5):
-    pipeline = model.base_estimator
+    calibrated = model.calibrated_classifiers_[0]
+    pipeline = calibrated.estimator
 
     vectorizer = pipeline.named_steps["tfidf"]
     classifier = pipeline.named_steps["clf"]
 
     tfidf = vectorizer.transform([texto])
 
-    classe_prevista = classifier.predict([texto])[0]
+    classe_prevista = classifier.predict(tfidf)[0]
     class_idx = classifier.classes_.tolist().index(classe_prevista)
 
     coef = classifier.coef_

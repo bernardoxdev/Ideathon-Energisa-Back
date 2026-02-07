@@ -13,3 +13,8 @@ class LoginAndRegister(BaseModel):
 class Refresh(BaseModel):
     access_token: str
     token_type: str
+
+class RiskResponse(BaseModel):
+    risco: str
+    confianca: float
+    justificativa: str

@@ -1,32 +1,17 @@
-import os
-import tempfile
-
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status, Depends
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from backend.ai.blip2.infer import analisar_cenario
-from backend.ai.risk.classifier import (
-    classificar_risco,
-    get_model
-)
-from backend.ai.risk.schema import RiskResult
-from backend.ai.risk.explain import explain_decision
-from backend.ai.risk.utils import normalizar
-
 from backend.core.database import get_db
+from backend.core.risk_core import process_risk_analysis
 from backend.models.risk_audit import RiskAudit
+from backend.models.return_schemas import (
+    RiskResponse
+)
 
 router = APIRouter(prefix="/risk", tags=["Risk"])
 
-class RiskResponse(BaseModel):
-    risco: str
-    confianca: float
-    justificativa: str
-
 @router.post(
-    "/classify",
-    status_code=status.HTTP_200_OK,
+    "/classify", status_code=status.HTTP_200_OK,
     response_model=RiskResponse,
     summary="Classificar risco a partir de texto e imagem",
     description="Analisa um cenário usando texto e imagem e retorna o nível de risco"
@@ -39,59 +24,30 @@ async def classify_risk(
     if imagem.content_type not in ("image/jpeg", "image/png"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Formato de imagem não suportado. Use JPG ou PNG."
+            detail="Formato de imagem não suportado."
         )
-
-    tmp_path = None
 
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-            tmp.write(await imagem.read())
-            tmp_path = tmp.name
+        conteudo_imagem = await imagem.read()
 
-        descricao_visual = analisar_cenario(texto, tmp_path)
+        resultado, _ = process_risk_analysis(db, texto, conteudo_imagem)
 
-        descricao_completa = (
-            f"Descrição visual: {descricao_visual}. "
-            f"Contexto adicional informado: {texto}"
+        return RiskResponse(
+            risco=resultado.risco,
+            confianca=resultado.confianca,
+            justificativa=resultado.justificativa
         )
-
-        resultado: RiskResult = classificar_risco(descricao_completa)
-
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao processar classificação de risco: {str(e)}"
+            detail=f"Erro interno: {str(e)}"
         )
 
-    finally:
-        if tmp_path and os.path.exists(tmp_path):
-            os.remove(tmp_path)
-
-    modelo = get_model()
-
-    termos_explicativos = explain_decision(modelo, normalizar(descricao_completa), top_k=5)
-
-    audit = RiskAudit(
-        input_text=texto,
-        visual_description=descricao_visual,
-        risco=resultado.risco,
-        confianca=resultado.confianca,
-        model_version="v1",
-        used_fallback=str(resultado.fallback_usado),
-        explain_terms=", ".join(termos_explicativos)
-    )
-
-    db.add(audit)
-    db.commit()
-
-    return RiskResponse(
-        risco=resultado.risco,
-        confianca=resultado.confianca,
-        justificativa=resultado.justificativa
-    )
-
-@router.get("/history")
+@router.get(
+    "/history", status_code=status.HTTP_200_OK,
+    summary="Historico de classificaçoes",
+    description="Pega todo o historico das classificacoes"
+)
 def listar_riscos(
     risco: str = None,
     db: Session = Depends(get_db)

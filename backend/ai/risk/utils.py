@@ -12,7 +12,6 @@ def normalizar(texto: str) -> str:
     texto = re.sub(r"[^\w\s]", " ", texto)
     texto = re.sub(r"\s+", " ", texto).strip()
 
-    # remove stopwords técnicas pouco informativas
     tokens = [
         t for t in texto.split()
         if t not in STOPWORDS_TECNICAS
@@ -21,9 +20,6 @@ def normalizar(texto: str) -> str:
     return " ".join(tokens)
 
 def expandir_frase(frase: str):
-    """
-    Expansão orientada a relatórios reais de campo
-    """
     return [
         frase,
         f"{frase} em area urbana",
@@ -36,3 +32,34 @@ def expandir_frase(frase: str):
         f"ocorrencia tecnica: {frase}",
         f"registro de campo: {frase}",
     ]
+
+def limpar_contextos_duplicados(texto: str) -> str:
+    linhas = re.split(r'\.\s*', texto)
+
+    vistos = set()
+    resultado = []
+
+    for linha in linhas:
+        linha = linha.strip()
+        if not linha:
+            continue
+
+        if ":" in linha:
+            rotulo, conteudo = linha.split(":", 1)
+            chave = normalizar(conteudo)
+        else:
+            rotulo = None
+            conteudo = linha
+            chave = normalizar(linha)
+
+        if not chave or chave in vistos:
+            continue
+
+        vistos.add(chave)
+
+        if rotulo:
+            resultado.append(f"{rotulo.strip()}: {conteudo.strip()}")
+        else:
+            resultado.append(conteudo.strip())
+
+    return ". ".join(resultado) + "."
