@@ -19,6 +19,7 @@ class Chamados(Base):
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
     atualizado_em = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    fotos = relationship("Fotos", back_populates="chamado", cascade="all, delete-orphan", passive_deletes=True)
     tipo = relationship("TiposChamados", back_populates="chamados")
     endereco = relationship("Enderecos", back_populates="chamados")
     cliente = relationship("User")

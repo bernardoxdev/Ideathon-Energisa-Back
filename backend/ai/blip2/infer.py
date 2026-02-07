@@ -1,9 +1,13 @@
 from PIL import Image
 import torch
-from .loader import model, processor, HAS_GPU
+
+from .loader import load_blip2
 from .prompt import RISK_PROMPT
 
+
 def analisar_cenario(texto: str, image_path: str) -> str:
+    model, processor, has_gpu = load_blip2()
+
     image = Image.open(image_path).convert("RGB")
 
     prompt = f"""
@@ -15,7 +19,7 @@ TEXTO DO USUÁRIO:
 DESCRIÇÃO:
 """
 
-    if HAS_GPU:
+    if has_gpu:
         inputs = processor(
             images=image,
             text=prompt,
@@ -28,20 +32,26 @@ DESCRIÇÃO:
                 max_new_tokens=80
             )
 
-        return processor.decode(output[0], skip_special_tokens=True)
-
-    else:
-        inputs = processor(
-            images=image,
-            return_tensors="pt"
+        return processor.decode(
+            output[0],
+            skip_special_tokens=True
         )
 
-        with torch.inference_mode():
-            output = model.generate(
-                **inputs,
-                max_new_tokens=60
-            )
+    # CPU fallback
+    inputs = processor(
+        images=image,
+        return_tensors="pt"
+    )
 
-        legenda = processor.decode(output[0], skip_special_tokens=True)
+    with torch.inference_mode():
+        output = model.generate(
+            **inputs,
+            max_new_tokens=60
+        )
 
-        return f"{legenda}. Contexto adicional: {texto}"
+    legenda = processor.decode(
+        output[0],
+        skip_special_tokens=True
+    )
+
+    return f"{legenda}. Contexto adicional: {texto}"

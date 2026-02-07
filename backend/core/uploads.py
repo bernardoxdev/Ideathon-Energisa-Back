@@ -1,20 +1,41 @@
 import os
 import uuid
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 
-BASE_DIR = "uploads"
-os.makedirs(BASE_DIR, exist_ok=True)
+BASE_UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
+MAX_FILE_SIZE = 10 * 1024 * 1024
 
-def salvar_imagem(file: UploadFile, pasta: str) -> str:
-    ext = file.filename.split(".")[-1]
-    nome = f"{uuid.uuid4()}.{ext}"
+ALLOWED_IMAGE_TYPES = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/webp": "webp",
+}
 
-    caminho = os.path.join(BASE_DIR, pasta)
-    os.makedirs(caminho, exist_ok=True)
+def salvar_imagem(arquivo: UploadFile, pasta: str) -> str:
+    if arquivo.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(400, "Tipo de imagem não permitido")
 
-    full_path = os.path.join(caminho, nome)
+    upload_dir = os.path.join(BASE_UPLOAD_DIR, pasta)
+    os.makedirs(upload_dir, exist_ok=True)
 
-    with open(full_path, "wb") as f:
-        f.write(file.file.read())
+    ext = ALLOWED_IMAGE_TYPES[arquivo.content_type]
+    nome_arquivo = f"{uuid.uuid4()}.{ext}"
+    caminho = os.path.join(upload_dir, nome_arquivo)
 
-    return full_path
+    tamanho = 0
+
+    try:
+        with open(caminho, "wb") as f:
+            while chunk := arquivo.file.read(1024 * 1024):
+                tamanho += len(chunk)
+                if tamanho > MAX_FILE_SIZE:
+                    raise HTTPException(413, "Imagem muito grande")
+                f.write(chunk)
+
+        return caminho
+
+    except Exception:
+        if os.path.exists(caminho):
+            os.remove(caminho)
+        raise

@@ -17,8 +17,33 @@ from backend.models.user import User
 
 router = APIRouter(prefix="/chamados", tags=["Chamados"])
 
+def _anexar_foto_chamado(
+    *,
+    imagem: UploadFile,
+    chamado_id: int,
+    db: Session
+) -> Fotos:
+    caminho = salvar_imagem(imagem, "chamados")
+
+    foto = Fotos(
+        nome_original=imagem.filename,
+        nome_armazenado=caminho.split("/")[-1],
+        caminho=caminho,
+        content_type=imagem.content_type,
+        origem="CHAMADO",
+        chamado_id=chamado_id
+    )
+
+    db.add(foto)
+    db.commit()
+    db.refresh(foto)
+
+    return foto
+
+
 @router.post(
-    "/", status_code=status.HTTP_201_CREATED,
+    "/",
+    status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_role("parceiros", "funcionarios", "admin", "owner"))]
 )
 def criar_chamado(
@@ -43,16 +68,40 @@ def criar_chamado(
     db.refresh(chamado)
 
     if imagem:
-        caminho = salvar_imagem(imagem, "chamados")
-        foto = Fotos(
-            caminho=caminho,
-            origem="CHAMADO",
-            chamado_id=chamado.id
+        _anexar_foto_chamado(
+            imagem=imagem,
+            chamado_id=chamado.id,
+            db=db
         )
-        db.add(foto)
-        db.commit()
 
     return chamado
+
+
+@router.post(
+    "/{chamado_id}/foto",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_role("funcionarios", "admin"))]
+)
+def anexar_foto_chamado(
+    chamado_id: int,
+    imagem: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    chamado = db.query(Chamados).get(chamado_id)
+
+    if not chamado:
+        raise HTTPException(404, "Chamado não encontrado")
+
+    foto = _anexar_foto_chamado(
+        imagem=imagem,
+        chamado_id=chamado.id,
+        db=db
+    )
+
+    return {
+        "msg": "Imagem anexada ao chamado",
+        "foto_id": foto.id
+    }
 
 @router.get(
     "/", status_code=status.HTTP_200_OK,

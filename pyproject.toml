@@ -3,9 +3,8 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "api-aulas"
-version = "0.2.0"
-description = "Plataforma de API com FastAPI, autenticação JWT e classificação multimodal de risco"
+name = "delta360-api"
+version = "0.1.0-BETA"
 readme = "README.md"
 requires-python = ">=3.10"
 

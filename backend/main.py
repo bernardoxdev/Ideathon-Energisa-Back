@@ -18,6 +18,9 @@ from backend.ai.risk.train_runner import train_if_needed
 from backend.api.auth import router as auth_router
 from backend.api.auth_admin import router as auth_admin_router
 from backend.api.risk import router as risk_router
+from backend.api.chamados_controller import router as chamados_router
+from backend.api.solicitacoes import router as solicitacoes_router
+from backend.api.usuarios_controller import router as usuarios_router
 
 try:
     load_dotenv()
@@ -49,8 +52,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Delta 360",
-    summary="",
+    summary="DELTA 360 — Portal Corporativo de Coordenação Multiconcessionária com ERP, API Integrada e Agentes de IA para Prevenção de Acidentes Elétricos",
     description="""
+    O Delta 360 é um portal corporativo (ERP) desenvolvido para a Energisa com o objetivo de centralizar, coordenar e prevenir riscos associados a intervenções realizadas em proximidade com a rede elétrica. A solução integra, por meio de uma API aberta, concessionárias, prefeituras, empresas de telecomunicações, iluminação pública, saneamento, construção civil e operadores de veículos de grande porte, oferecendo à Energisa uma plataforma própria de gestão de chamados, conflitos operacionais e riscos. Agentes de inteligência artificial orquestrados analisam eventos de campo, identificam duplicidades, detectam conflitos, calculam riscos e recomendam ações preventivas, reduzindo acidentes, custos operacionais e passivos jurídicos.
     """,
     version="v0.1.0-BETA",
     lifespan=lifespan
@@ -82,6 +86,9 @@ async def rate_limit_handler(request, exc):
 app.include_router(auth_router)
 app.include_router(auth_admin_router)
 app.include_router(risk_router)
+app.include_router(chamados_router)
+app.include_router(solicitacoes_router)
+app.include_router(usuarios_router)
 
 if __name__ == '__main__':
     pass

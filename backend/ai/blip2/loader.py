@@ -2,28 +2,46 @@ import torch
 
 HAS_GPU = torch.cuda.is_available()
 
-if HAS_GPU:
-    from transformers import Blip2Processor, Blip2ForConditionalGeneration
+_model = None
+_processor = None
+_model_name = None
 
-    MODEL_NAME = "Salesforce/blip2-flan-t5-xl"
+def load_blip2():
+    global _model, _processor, _model_name
 
-    processor = Blip2Processor.from_pretrained(MODEL_NAME)
+    if _model is not None and _processor is not None:
+        return _model, _processor, HAS_GPU
 
-    model = Blip2ForConditionalGeneration.from_pretrained(
-        MODEL_NAME,
-        device_map="auto",
-        torch_dtype=torch.float16
-    ).eval()
-else:
-    from transformers import BlipProcessor, BlipForConditionalGeneration
+    if HAS_GPU:
+        from transformers import Blip2Processor, Blip2ForConditionalGeneration
 
-    MODEL_NAME = "Salesforce/blip-image-captioning-large"
+        _model_name = "Salesforce/blip2-flan-t5-xl"
 
-    processor = BlipProcessor.from_pretrained(
-        MODEL_NAME,
-        use_fast=False
-    )
+        print("🚀 Carregando BLIP-2 (GPU)...")
 
-    model = BlipForConditionalGeneration.from_pretrained(
-        MODEL_NAME
-    ).eval()
+        _processor = Blip2Processor.from_pretrained(_model_name)
+
+        _model = Blip2ForConditionalGeneration.from_pretrained(
+            _model_name,
+            device_map="auto",
+            torch_dtype=torch.float16
+        ).eval()
+
+    else:
+        from transformers import BlipProcessor, BlipForConditionalGeneration
+
+        _model_name = "Salesforce/blip-image-captioning-large"
+
+        print("🐌 Carregando BLIP (CPU)...")
+
+        _processor = BlipProcessor.from_pretrained(
+            _model_name,
+            use_fast=False
+        )
+
+        _model = BlipForConditionalGeneration.from_pretrained(
+            _model_name
+        ).eval()
+
+    print(f"✅ Modelo carregado: {_model_name}")
+    return _model, _processor, HAS_GPU

@@ -2,10 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile,
 from sqlalchemy.orm import Session
 
 from backend.core.database import get_db
-from backend.core.security import (
-    require_role,
-    get_current_user
-)
+from backend.core.security import require_role, get_current_user
 from backend.core.uploads import salvar_imagem
 
 from backend.models.fotos import Fotos
@@ -31,7 +28,8 @@ def criar_solicitacao(
         descricao=descricao,
         client_id=usuario.id,
         endereco_id=endereco_id,
-        tipo_id=tipo_id
+        tipo_id=tipo_id,
+        status="PENDENTE"
     )
 
     db.add(solicitacao)
@@ -40,11 +38,16 @@ def criar_solicitacao(
 
     if imagem:
         caminho = salvar_imagem(imagem, "solicitacoes")
+
         foto = Fotos(
+            nome_original=imagem.filename,
+            nome_armazenado=caminho.split("/")[-1],
             caminho=caminho,
+            content_type=imagem.content_type,
             origem="SOLICITACAO",
             solicitacao_id=solicitacao.id
         )
+
         db.add(foto)
         db.commit()
 
@@ -52,8 +55,6 @@ def criar_solicitacao(
 
 @router.get(
     "/", status_code=status.HTTP_200_OK,
-    summary="",
-    description="",
     dependencies=[Depends(require_role("funcionarios", "admin", "owner"))]
 )
 def listar_solicitacoes(
@@ -67,21 +68,19 @@ def listar_solicitacoes(
 
     return query.order_by(Solicitacoes.criado_em.desc()).all()
 
+
 @router.post(
-    "/{solicitacao_id}/aprovar", status_code=status.HTTP_200_OK,
-    summary="",
-    description="",
+    "/{solicitacao_id}/aprovar",
+    status_code=status.HTTP_200_OK,
     dependencies=[Depends(require_role("funcionarios", "admin", "owner"))]
 )
 def aprovar_solicitacao(
     solicitacao_id: int,
     db: Session = Depends(get_db),
-    usuario: User = Depends(...)
+    usuario: User = Depends(get_current_user)
 ):
-    if usuario.role not in ["funcionarios", "admin"]:
-        raise HTTPException(403, "Permissão negada")
-
     solicitacao = db.query(Solicitacoes).get(solicitacao_id)
+
     if not solicitacao:
         raise HTTPException(404, "Solicitação não encontrada")
 
@@ -104,22 +103,20 @@ def aprovar_solicitacao(
 
     return {"msg": "Solicitação aprovada e chamado criado"}
 
+
 @router.post(
-    "/{solicitacao_id}/rejeitar", status_code=status.HTTP_200_OK,
-    summary="",
-    description="",
+    "/{solicitacao_id}/rejeitar",
+    status_code=status.HTTP_200_OK,
     dependencies=[Depends(require_role("funcionarios", "admin", "owner"))]
 )
 def rejeitar_solicitacao(
     solicitacao_id: int,
-    motivo: str,
+    motivo: str = Form(...),
     db: Session = Depends(get_db),
     usuario: User = Depends(get_current_user)
 ):
-    if usuario.role not in ["funcionarios", "admin"]:
-        raise HTTPException(403, "Permissão negada")
-
     solicitacao = db.query(Solicitacoes).get(solicitacao_id)
+
     if not solicitacao:
         raise HTTPException(404, "Solicitação não encontrada")
 
@@ -127,6 +124,3 @@ def rejeitar_solicitacao(
     db.commit()
 
     return {"msg": "Solicitação rejeitada"}
-
-if __name__ == '__main__':
-    pass

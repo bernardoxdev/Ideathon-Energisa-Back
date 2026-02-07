@@ -21,3 +21,4 @@ class Solicitacoes(Base):
     cliente = relationship("User")
     endereco = relationship("Enderecos")
     tipo = relationship("TiposChamados")
+    fotos = relationship("Fotos", back_populates="solicitacao", cascade="all, delete-orphan", passive_deletes=True)
