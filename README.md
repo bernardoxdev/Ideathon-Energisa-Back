@@ -2,6 +2,8 @@
 
 Este documento descreve **todas as tabelas do banco de dados** utilizadas no projeto **Delta 360**, incluindo finalidade, campos, relacionamentos e observações arquiteturais.
 
+Link do painel: https://portaldelta360.lovable.app/#about
+
 ---
 
 ## Tabela: users
